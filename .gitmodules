@@ -1,0 +1,3 @@
+[submodule "[MatlabFunctional]"]
+	path = [MatlabFunctional]
+	url = https://github.com/KySpace/MatlabFunctional

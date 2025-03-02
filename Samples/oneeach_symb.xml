@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<experiment_sequence>
+  <digital address="16" frequency="50"> 
+    <!-- chanid         time                       value -->
+    <!-- Both time and value can be symbolic expressions -->
+           0,            0                       ,     0       
+           0,   t0 + ti_Shutter                  ,  b_Shutter
+           0,           tf                       ,     0
+    <!-- Variables can be re-used -->
+           1,            0                       ,     0
+           1,   t0 + ti_Imag_1                   ,     1
+           1,   t0 + ti_Imag_1 + Dt_TriggImag    ,     0
+           1,   t0 + ti_Imag_2                   ,     1
+           1,   t0 + ti_Imag_2 + Dt_TriggImag    ,     0
+           1,   t0 + ti_Imag_3                   ,     1
+           1,   t0 + ti_Imag_3 + Dt_TriggImag    ,     0
+           6,   t0 + ti_Pulse                    ,     0
+           6,   t0 + ti_Pulse + 0.02             ,     1
+           6,   t0 + ti_Pulse + 2*0.02           ,     0
+    <!-- A constant is fine -->  
+          13,            0                       ,     1
+    <!-- The largest chanid is 15 -->
+    <!-- It is advised in the leader module, to always have a digital channel 
+    to always have a signal time later than all other modules' sequences -->  
+          15,            0                       ,     1
+          15,           tf                       ,     0
+  </digital>
+  <ddsrf address="49" ddsamp="10.23" ddsfreq="500" frequency="50">
+    <channel chnum="0" name="Imaging AOM">
+      t0 + ti_Imag_1 - dt           ,        0,      FreqImag
+      t0 + ti_Imag_1                ,  AmpImag,      FreqImag
+      t0 + ti_Imag_1 + Dt_Imag      ,  AmpImag,      FreqImag
+      t0 + ti_Imag_1 + Dt_Imag + dt ,        0,      FreqImag
+      t0 + ti_Imag_3 - dt           ,        0,      FreqImag
+      t0 + ti_Imag_3                ,  AmpImag,      FreqImag
+      t0 + ti_Imag_3 + Dt_Imag      ,  AmpImag,      FreqImag
+      t0 + ti_Imag_3 + Dt_Imag + dt ,        0,      FreqImag
+    </channel>
+    <!-- You can ramp the amplitude and frequency at the same time -->
+    <channel chnum="1" name="Lock Reference">
+            0         ,        AmpRef,          FreqRefOrig
+      t0 + ti_Ramp_Ref,        AmpRef,          FreqRefOrig
+      t0 + tf_Ramp_Ref,        AmpRef,          FreqRefOrig + FreqShft
+      t0 + tf_Hold_Ref,    AmpRefShft,          FreqRefOrig + FreqShft
+      tf              ,        AmpRef,          FreqRefOrig
+    </channel>
+    <!-- Avoid ramping amplitude, frequency and dithering at the same time -->
+    <!-- If two channels have near identical ramp, it saves the bandwidth -->
+    <channel chnum="2" name="Awesome Big Laser 1" feature="dither">
+      t0 + ti_AwesomeLaser - dt_AwesomeLaser ,                    0,   FreqAwesomeLaser, false,    0
+      t0 + ti_AwesomeLaser                   ,  AmpAwesomeLaserFull,   FreqAwesomeLaser, false,  Dither_Max
+      t0 + ti_AwesomeLaser + Dt_Dither       ,  AmpAwesomeLaserFull,   FreqAwesomeLaser, false,  Dither_Min
+      t0 + ti_AwesomeLaser + Dt_Dither + dt  ,  AmpAwesomeLaserFull,   FreqAwesomeLaser, false,    0
+      t0 + ti_AwesomeLaser + Dt_AwesomeLaser ,  AmpAwesomeLaserFull,   FreqAwesomeLaser, false,    0
+      t0 + tf_AwesomeLaser - dt              ,  AmpAwesomeLaserEnd ,   FreqAwesomeLaser, false,    0
+      t0 + tf_AwesomeLaser                   ,                    0,   FreqAwesomeLaser, false,    0
+    </channel>
+    <channel chnum="3" name="Awesome Big Laser 2" feature="dither">
+      t0 + ti_AwesomeLaser - dt_AwesomeLaser ,                    0,   FreqAwesomeLaser, false,    0
+      t0 + ti_AwesomeLaser                   ,  AmpAwesomeLaserFull,   FreqAwesomeLaser, false,  Dither_Max
+      t0 + ti_AwesomeLaser + Dt_Dither       ,  AmpAwesomeLaserFull,   FreqAwesomeLaser, false,  Dither_Min
+      t0 + ti_AwesomeLaser + Dt_Dither + dt  ,  AmpAwesomeLaserFull,   FreqAwesomeLaser, false,    0
+      t0 + ti_AwesomeLaser + Dt_AwesomeLaser ,  AmpAwesomeLaserFull,   FreqAwesomeLaser, false,    0
+      t0 + tf_AwesomeLaser - dt              ,  AmpAwesomeLaserEnd ,   FreqAwesomeLaser, false,    0
+      t0 + tf_AwesomeLaser                   ,                    0,   FreqAwesomeLaser, false,    0
+    </channel>
+  </ddsrf>
+  <analog address='42' frequency='50' enabled='true'>
+    <!-- Gives maximum range and either polarity -->
+    <channel name='Top Coil' chnum='0' voltrangemode='8'>
+                0             , 0
+               dt             , BFieldLow * Coeff_Field
+        t0 + tf_FieldLow      , BFieldLow * Coeff_Field
+        t0 + tf_FieldLow + dt , 0
+        t0 + ti_FieldRamp     , 0 
+        t0 + tf_FieldRamp     , + BFieldHigh * Coeff_Field
+        tf - dt               , + BFieldHigh * Coeff_Field
+        tf                    , 0
+    </channel>
+    <channel name='Bot Coil' chnum='1' voltrangemode='8'>
+                0             , 0
+               dt             , BFieldLow / Coeff_Field
+        t0 + tf_FieldLow      , BFieldLow / Coeff_Field
+        t0 + tf_FieldLow + dt , 0
+        t0 + ti_FieldRamp     , 0 
+        t0 + tf_FieldRamp     , - BFieldHigh / Coeff_Field
+        tf - dt               , - BFieldHigh / Coeff_Field
+        tf                    , 0
+    </channel>
+    <!-- Gives best definition -->
+    <channel name='Feeback Reference' chnum='2' voltrangemode='5'>
+      t0 + ti_RefShft           , Volt_Normal
+      t0 + tf_RefShft           , Volt_Special
+      t0 + tf_RefShft + Dt_Ref  , Volt_Special
+      tf                        , Volt_Normal
+    </channel>
+    <channel name='Constant' chnum='3' voltrangemode='7'>
+         0                      , -5.0
+    </channel>
+  </analog>
+</experiment_sequence>

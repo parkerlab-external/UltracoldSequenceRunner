@@ -1,0 +1,49 @@
+[
+    {   "Tag" : "digital", "Name" : "Digital", "Scaler" : "ScaleToDigitalRange",
+        "Parser" : "ParseDigital", "CmdBuilder" : "BuildCmdDigital", "Command List" : [
+            {   "Prefix" : "E", "Name" : "Extend", "Format" : {
+                    "signed" : [false     , false          ],
+                    "length" : [1         , 2              ],
+                    "name"   : ["prefix"  , "chkpt count"  ],
+                    "op"     : ["c"       , "02X"          ]   } },
+            {   "Prefix" : "U", "Name" : "Update", "Format" : {
+                    "signed" : [false     , false        , false            , false         ],
+                    "length" : [1         , 2            , 4                , 2             ],
+                    "name"   : ["prefix"  , "chkpt pos"  , "duration"       , "value"       ],
+                    "op"     : ["c"       , "02X"        , "02X"            , "02X"         ]   } },
+            {   "Prefix" : "T", "Name" : "Update", "Format" :  { "signed" : [false], "length" : [1], "name" : "prefix", "op" : "c"  }   }
+        ]  },
+    {   "Tag" : "ddsrf", "Name" : "DDS RF", "Scaler" : "ScaleToDDSRFRange",
+        "Parser" : "ParseDDSRF", "CmdBuilder" : "BuildCmdDDSRF", "Command List" : [
+            {   "Prefix" : "E", "Name" : "Extend", "Format" : {
+                    "signed" : [false     , false     , false          ],
+                    "length" : [1         , 1         , 2              ],
+                    "name"   : ["prefix"  , "slot id" , "chkpt count"  ],
+                    "op"     : ["c"       , "02X"     , "02X"          ]   } },
+            {   "Prefix" : "U", "Name" : "Update", "Format" : {
+                    "signed" : [false     , false     , false     , false        , true             , true          ],
+                    "length" : [1         , 1         , 1         , 2            , 4                , 4             ],
+                    "name"   : ["prefix"  , "slot id" , "mask"    , "chkpt pos"  , "duration"       , "value"       ],
+                    "op"     : ["c"       , "02X"     , "02X"     , "02X"        , "02X"            , "02X"         ]   } },
+            {   "Prefix" : "T", "Name" : "Update", "Format" :  { "signed" : [false], "length" : [1], "name" : "prefix", "op" : "c"  }   }
+        ]  },
+    {   "Tag" : "analog", "Name" : "Analog", "Scaler" : "ScaleToVoltRange",
+        "Parser" : "ParseAnalog", "CmdBuilder" : "BuildCmdAnalog", "Command List" : [
+            {   "Prefix" : "G", "Name" : "Gain", "Format" : {
+                    "signed" : [false     , false     , false          ],
+                    "length" : [1         , 1         , 1              ],
+                    "name"   : ["prefix"  , "slot id" , "range mode"   ],
+                    "op"     : ["c"       , "02X"     , "02X"          ]   } },
+            {   "Prefix" : "E", "Name" : "Extend", "Format" : {
+                    "signed" : [false     , false     , false          ],
+                    "length" : [1         , 1         , 2              ],
+                    "name"   : ["prefix"  , "slot id" , "chkpt count"  ],
+                    "op"     : ["c"       , "02X"     , "02X"          ]   } },            
+            {   "Prefix" : "U", "Name" : "Update", "Format" : {
+                    "signed" : [false     , false     , false        , true             , true          ],
+                    "length" : [1         , 1         , 2            , 4                , 4             ],
+                    "name"   : ["prefix"  , "slot id" , "chkpt pos"  , "duration"       , "voltage"     ],
+                    "op"     : ["c"       , "02X"     , "02X"        , "02X"            , "02X"         ]   }  },
+            {   "Prefix" : "T", "Name" : "Update", "Format" :  { "signed" : [false], "length" : [1], "name" : "prefix", "op" : "c"  }   }
+        ]  }
+]
