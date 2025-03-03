@@ -17,7 +17,29 @@ loadlib
 ```matlab
 testprepall
 ```
-These two sequences should yield the same results in the log files.
+These two sequences should yield the same results in the log files, where you should see something like this:
+```
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁ 
+Command List for Analog module at address 0x2A (042) 
+ ┄ prefix ┄┄ slot id ┄┄ range mode ┄
+ ░░░░ G ░░░░░░░ 00 ░░░░░░░░ 08 ░░░░░
+ ░░░░ G ░░░░░░░ 01 ░░░░░░░░ 08 ░░░░░
+ ░░░░ G ░░░░░░░ 02 ░░░░░░░░ 05 ░░░░░
+ ░░░░ G ░░░░░░░ 03 ░░░░░░░░ 07 ░░░░░
+ ┄ prefix ┄┄ slot id ┄┄ chkpt count ┄
+ ░░░░ E ░░░░░░░ 00 ░░░░░░░ 00 0E ░░░░
+ ░░░░ E ░░░░░░░ 01 ░░░░░░░ 00 0E ░░░░
+ ░░░░ E ░░░░░░░ 02 ░░░░░░░ 00 09 ░░░░
+ ░░░░ E ░░░░░░░ 03 ░░░░░░░ 00 03 ░░░░
+ ┄ prefix ┄┄ slot id ┄┄ chkpt pos ┄┄┄┄ duration ┄┄┄┄┄ voltage ┄┄┄
+ ░░░░ U ░░░░░░░ 00 ░░░░░░ 00 00 ░░░░ FF FF FF FE ░░ 80 00 80 00 ░
+ ░░░░ U ░░░░░░░ 00 ░░░░░░ 00 01 ░░░░ FF FF FF FE ░░ 93 C6 80 00 ░
+ ░░░░ U ░░░░░░░ 00 ░░░░░░ 00 02 ░░░░ 00 02 57 9A ░░ 00 00 00 00 ░
+ ░░░░ U ░░░░░░░ 00 ░░░░░░ 00 03 ░░░░ FF FF FF FE ░░ 93 C6 80 00 ░
+ ░░░░ U ░░░░░░░ 00 ░░░░░░ 00 04 ░░░░ FF FF FF FE ░░ 80 00 80 00 ░
+ ░░░░ U ░░░░░░░ 00 ░░░░░░ 00 05 ░░░░ 00 00 05 DA ░░ 00 00 00 00 ░
+...
+```
 You don't need serial connection for this test. It simply outputs to the console.
 ### Run it!
 To test on real modules. You need to connect your PC to the repeater module through USB. Make sure your repeater module is connected to other modules specified in your XML sequence file through the Backplane and all modules are powered. 
@@ -38,7 +60,7 @@ SerialStartDevice(sp, address);
 SerialStartDevice(sp, address);
 ```
 This will update all modules once and run three times. You may need to manually insert pauses in between start commands.
-### Do It Yourself!
+## Do It Yourself!
 To use this library, you need the following configurations:
 - A sequence file in XML format. The root node of the file is
 ```xml
@@ -63,7 +85,7 @@ The values in the CSV can be numeric or symbolic expressions.
 ```matlab
 fid = fopen("seq_cmd.txt", "w");
 ```
-### Extend it!
+## Extend it!
 If you want to add your own modules, you need to include the following custom functions to your path for each module:
 - The parser: `seq_symb = ParseXXX(node)`, that turns the XML node of the module to a sequence containing symbolic expressions as data. The returned structure needs to include the required fields.
 - The command builder: `seq_cmd_u8 = BuildCmdXXX(seq_num, time_last, mod_info, file_log)`, that builds the flattened `uint8` array of command list from a numeric sequence: the sequence where expressions are evaluated into numeric values. The `time_last` is the longest time of the entire multi-module sequence. `mod_info` contains additional information for the module type.
@@ -73,29 +95,29 @@ To tell the sequence runner which custom functions to look to, as well as how th
 ## Peek inside
 ### Call Hierarchy and data flow.
 ```rust
-                                          ┌─────┬────────────────────┐ // The address of the Leader
+                                          ┌─────┬────────────────────────┐ // The address of the Leader
 QuickUpdate                      (dicts, sp, address, filename_xml, ...) │
-    │                              │      │     ┌────────┘           │
+    │                              │      │     ┌────────┘               │
     ├─ UpdateFromXML             (dicts, sp, filename_xml)               │
-    │    │                         │            │                    │
-    │    │ /*generate sequence*/   │            │                    │
-    │    │ /*no communication*/    ↓            │                    │
+    │    │                         │            │                        │
+    │    │ /*generate sequence*/   │            │                        │
+    │    │ /*no communication*/    ↓            │                        │
     │    ├─ PrepFromXML          (dicts,     filename_xml, file_debug)   │    
-    │    │    │                    │            ↓                    │
+    │    │    │                    │            ↓                        │
     │    │    ├ ParseXML           │        (filename_xml, map_mod)      │    
-    │    │    │   └ Parse...           (node) ─┐ // seq_symb : sequence with symbolic values   
-    │    │    │   /*per mod type*/ ↓           ↓                     │    
+    │    │    │   └ Parse...           (node) ─┐              // seq_symb : sequence with symbolic values   
+    │    │    │   /*per mod type*/ ↓           ↓                         │    
     │    │    ├ MakeNumericQueue (dicts, seq_symb, map_mod) ┐ // seq_num : sequence with numeric values    
-    │    │    │   └ ScaleTo...         (...)  ┌─────────────┘        │  
-    │    │    │   /*per mod type*/            ↓                      │
+    │    │    │   └ ScaleTo...         (...)  ┌─────────────┘            │  
+    │    │    │   /*per mod type*/            ↓                          │
     │    │    └ BuildCmd...            (seq_num, ...) ────┐   // cmdlist_u8 : sequence converted to uint8 array, log is printed here
-    │    │        /*per mod type*/                        │          │
-    │    │                                 ┌─────┬───────────────────┤ 
-    │    │ /*update by writing*/           ↓     ↓        ↓          │
+    │    │        /*per mod type*/                        │              │
+    │    │                                 ┌─────┬───────────────────────┤ 
+    │    │ /*update by writing*/           ↓     ↓        ↓              │
     │    ├─ SerialWriteToDevice          (sp, address, cmdlist_u8) ┐ // response : containing the response type    
-    │    ├─ HandleResponse                 ↓ (address, response) ←─┘ │               
-    │    └─ SerialEndMessage             (sp)                        │ 
-    │                                      ┌─────┬───────────────────┘                      
+    │    ├─ HandleResponse                 ↓ (address, response) ←─┘     │               
+    │    └─ SerialEndMessage             (sp)                            │ 
+    │                                      ┌─────┬───────────────────────┘                      
     │   /*start with sync*/                ↓     ↓                          
     └── SerialStartDevice                (sp, address)                                      
          └─ SerialEndMessage             (sp)
